@@ -44,6 +44,7 @@ from nemo_skills.evaluation.metrics.mmau_pro_metrics import MMAUProMetrics
 from nemo_skills.evaluation.metrics.mrcr_metrics import MRCRMetrics
 from nemo_skills.evaluation.metrics.omni_metrics import OmniMetrics
 from nemo_skills.evaluation.metrics.physics_metrics import PhysicsMetrics
+from nemo_skills.evaluation.metrics.rasb_metrics import RasbMetrics
 from nemo_skills.evaluation.metrics.ruler2_metrics import Ruler2Metrics
 from nemo_skills.evaluation.metrics.ruler_metrics import RulerMetrics
 from nemo_skills.evaluation.metrics.simpleqa_metrics import SimpleQAMetrics
@@ -86,6 +87,7 @@ METRICS_MAP = {
     "scicode": SciCodeMetrics,
     "bigcodebench": BigCodeBenchMetrics,
     "mrcr": MRCRMetrics,
+    "rasb": RasbMetrics,
     "aalcr": AALCRMetrics,
     "livebench_coding": LiveCodeBenchMetrics,
     "translation": TranslationMetrics,

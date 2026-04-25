@@ -84,6 +84,7 @@ nav:
     - evaluation/instruction-following.md
     - evaluation/long-context.md
     - evaluation/tool-calling.md
+    - evaluation/rasb.md
     - evaluation/multilingual.md
     - evaluation/speech-audio.md
     - evaluation/vlm.md
