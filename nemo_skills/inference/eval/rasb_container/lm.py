@@ -1,3 +1,10 @@
+"""
+Language model client wrappers for RASB benchmark evaluation.
+
+Provides unified interfaces for OpenAI-compatible and Anthropic APIs,
+supporting both synchronous and asynchronous queries with tool calling.
+"""
+
 import os
 import threading
 from typing import Any, Literal
@@ -255,6 +262,7 @@ class OpenAILM(LM):
         self.verbosity = verbosity
 
     def _defaults(self, **kwargs) -> dict:
+        """Merge instance defaults and convert max_tokens to max_output_tokens."""
         kwargs = super()._defaults(**kwargs)
         if "max_tokens" in kwargs:
             kwargs["max_output_tokens"] = kwargs.pop("max_tokens")
@@ -267,6 +275,7 @@ class OpenAILM(LM):
         return kwargs
 
     def query(self, prompt: str, **kwargs) -> str:
+        """Send a single user prompt via the Responses API and return the response text."""
         kwargs = self._defaults(**kwargs)
         try:
             response = self.client.responses.create(
@@ -280,6 +289,7 @@ class OpenAILM(LM):
             raise LMQueryError(f"Error querying {self.model}: {e}") from e
 
     async def aquery(self, prompt: str, **kwargs) -> str:
+        """Async version of query using the Responses API."""
         kwargs = self._defaults(**kwargs)
         try:
             response = await self.async_client.responses.create(
@@ -293,6 +303,7 @@ class OpenAILM(LM):
             raise LMQueryError(f"Error querying {self.model}: {e}") from e
 
     def query_messages(self, messages: list[dict], **kwargs) -> str:
+        """Send a message list via the Responses API and return the response text."""
         input_items, instructions = _messages_to_responses_input(messages)
         try:
             kwargs = self._defaults(**kwargs)
@@ -310,6 +321,7 @@ class OpenAILM(LM):
             raise LMQueryError(f"Error querying {self.model}: {e}") from e
 
     async def aquery_messages(self, messages: list[dict], **kwargs) -> str:
+        """Async version of query_messages using the Responses API."""
         input_items, instructions = _messages_to_responses_input(messages)
         kwargs = self._defaults(**kwargs)
         create_kwargs = {k: v for k, v in kwargs.items() if k not in ("messages",)}
@@ -451,6 +463,7 @@ class _FakeToolCall:
     """Mimics OpenAI's tool call object for compatibility with Cache."""
 
     def __init__(self, tc_id: str, name: str, arguments: str):
+        """Create a fake tool call with the given id, function name, and arguments."""
         self.id = tc_id
         self.function = type("Function", (), {"name": name, "arguments": arguments})()
 
@@ -459,6 +472,7 @@ class _FakeMessage:
     """Mimics OpenAI's ChatCompletionMessage for compatibility with Cache."""
 
     def __init__(self, content: str | None, tool_calls: list[_FakeToolCall] | None):
+        """Create a fake message with optional content and tool calls."""
         self.content = content
         self.tool_calls = tool_calls if tool_calls else None
 
@@ -467,6 +481,7 @@ class _FakeChoice:
     """Mimics OpenAI's Choice for compatibility with Cache."""
 
     def __init__(self, message: _FakeMessage, finish_reason: str):
+        """Create a fake choice wrapping a message with the given finish reason."""
         self.message = message
         self.finish_reason = finish_reason
 
@@ -475,6 +490,7 @@ class _FakeChatCompletion:
     """Mimics OpenAI's ChatCompletion so Cache's ``hasattr(response, 'choices')`` path works."""
 
     def __init__(self, choice: _FakeChoice, thinking: str | None = None):
+        """Create a fake completion with choices list and optional thinking content."""
         self.choices = [choice]
         self.thinking = thinking
 
@@ -572,6 +588,7 @@ class AnthropicLM(LM):
         return ""
 
     def query(self, prompt: str, **kwargs) -> str:
+        """Send a single user prompt via Anthropic Messages API and return response text."""
         kw = self._anthropic_kwargs(**kwargs)
         try:
             response = self.anthropic_client.messages.create(
@@ -584,6 +601,7 @@ class AnthropicLM(LM):
             raise LMQueryError(f"Error querying {self.model}: {e}") from e
 
     async def aquery(self, prompt: str, **kwargs) -> str:
+        """Async version of query using the Anthropic Messages API."""
         kw = self._anthropic_kwargs(**kwargs)
         try:
             response = await self.anthropic_async_client.messages.create(
@@ -596,6 +614,7 @@ class AnthropicLM(LM):
             raise LMQueryError(f"Error querying {self.model}: {e}") from e
 
     def query_messages(self, messages: list[dict], **kwargs) -> str:
+        """Send a message list via Anthropic Messages API and return response text."""
         kw = self._anthropic_kwargs(**kwargs)
         system, anthropic_msgs = _openai_messages_to_anthropic(messages)
         if system is not None:
@@ -611,6 +630,7 @@ class AnthropicLM(LM):
             raise LMQueryError(f"Error querying {self.model}: {e}") from e
 
     async def aquery_messages(self, messages: list[dict], **kwargs) -> str:
+        """Async version of query_messages using the Anthropic Messages API."""
         kw = self._anthropic_kwargs(**kwargs)
         system, anthropic_msgs = _openai_messages_to_anthropic(messages)
         if system is not None:
